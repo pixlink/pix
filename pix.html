@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamento Pix</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    .box { max-width: 720px; margin: 0 auto; }
+    textarea { width: 100%; min-height: 140px; padding: 12px; box-sizing: border-box; }
+    button { padding: 10px 14px; margin-top: 10px; cursor: pointer; }
+    .muted { color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Pix</h1>
+    <p class="muted">Se necessário, copie e cole o código abaixo no app do banco.</p>
+
+    <div id="pedidoBox" class="muted"></div>
+
+    <textarea id="pix" readonly></textarea>
+    <br />
+    <button id="copy">Copiar Pix</button>
+    <div id="status" class="muted"></div>
+  </div>
+
+  <script>
+    const pix = decodeURIComponent((location.hash || "").slice(1));
+    document.getElementById("pix").value = pix || "";
+
+    const pedido = new URLSearchParams(location.search).get("pedido");
+    if (pedido) {
+      document.getElementById("pedidoBox").textContent = `Pedido: ${pedido}`;
+    }
+
+    document.getElementById("copy").addEventListener("click", async () => {
+      const text = document.getElementById("pix").value;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("status").textContent = "Copiado!";
+      } catch {
+        document.getElementById("status").textContent = "Não consegui copiar automaticamente. Copie manualmente.";
+      }
+    });
+  </script>
+</body>
+</html>

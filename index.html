@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Encurtador Pix</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    .box { max-width: 720px; margin: 0 auto; }
+    textarea, input { width: 100%; padding: 12px; box-sizing: border-box; margin-top: 8px; }
+    textarea { min-height: 140px; }
+    button { padding: 10px 14px; margin-top: 10px; cursor: pointer; }
+    .muted { color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Encurtador de Pix</h1>
+
+    <label>Pix copia e cola</label>
+    <textarea id="pix" placeholder="Cole aqui..."></textarea>
+
+    <label>Nº do pedido (opcional)</label>
+    <input id="pedido" placeholder="Ex.: 12345" />
+
+    <button id="gerar">Gerar link curto</button>
+
+    <label>Link curto</label>
+    <input id="link" readonly placeholder="O link aparece aqui" />
+    <button id="copiar" disabled>Copiar link</button>
+
+    <div id="status" class="muted"></div>
+  </div>
+
+  <script>
+    const WORKER_API = "https://encurtador.pixlink111.workers.dev"; // troque se necessário
+
+    const pixEl = document.getElementById("pix");
+    const pedidoEl = document.getElementById("pedido");
+    const linkEl = document.getElementById("link");
+    const statusEl = document.getElementById("status");
+    const btnGerar = document.getElementById("gerar");
+    const btnCopiar = document.getElementById("copiar");
+
+    btnGerar.addEventListener("click", async () => {
+      const pix = pixEl.value.trim();
+      const pedido = pedidoEl.value.trim();
+
+      statusEl.textContent = "Gerando...";
+      linkEl.value = "";
+      btnCopiar.disabled = true;
+
+      const res = await fetch(`${WORKER_API}/api/shorten`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pix, pedido })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        statusEl.textContent = data?.error || `Erro HTTP ${res.status}`;
+        return;
+      }
+
+      linkEl.value = data.shortUrl;
+      btnCopiar.disabled = false;
+      statusEl.textContent = "Pronto!";
+    });
+
+    btnCopiar.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(linkEl.value);
+        statusEl.textContent = "Link copiado!";
+      } catch {
+        statusEl.textContent = "Não consegui copiar automaticamente.";
+      }
+    });
+  </script>
+</body>
+</html>
